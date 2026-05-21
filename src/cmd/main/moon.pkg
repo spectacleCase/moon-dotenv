@@ -1,0 +1,7 @@
+import {
+  "lizhentao/dotenv" @lib,
+}
+
+options(
+  "is-main": true,
+)

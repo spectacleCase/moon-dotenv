@@ -1,0 +1,16 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "lizhentao/dotenv"
+
+// Values
+pub fn expand(Map[String, String], env? : Map[String, String]) -> Map[String, String]
+
+pub fn parse(String) -> Map[String, String]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+
