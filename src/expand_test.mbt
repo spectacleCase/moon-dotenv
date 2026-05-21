@@ -69,3 +69,24 @@ test "expand default value with special chars" {
   let result = expand(parsed)
   assert_eq(result["REF"], "hello world")
 }
+
+///|
+test "expand alt value when defined" {
+  let parsed = parse("KEY=original\nREF=${KEY:+replaced}")
+  let result = expand(parsed)
+  assert_eq(result["REF"], "replaced")
+}
+
+///|
+test "expand alt value empty when undefined" {
+  let parsed = parse("REF=${UNDEFINED:+replaced}")
+  let result = expand(parsed)
+  assert_eq(result["REF"], "")
+}
+
+///|
+test "expand alt value empty string when defined" {
+  let parsed = parse("KEY=val\nREF=${KEY:+}")
+  let result = expand(parsed)
+  assert_eq(result["REF"], "")
+}

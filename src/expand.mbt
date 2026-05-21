@@ -42,18 +42,23 @@ fn expand_value(
         if i < len {
           i += 1
         } // skip closing }
-        // Check for :-default syntax
-        let (var_name, default_val) = parse_var_spec(raw)
-        match resolve_var(var_name, parsed, env) {
-          Some(v) => buf.write_string(v)
+        let (var_name, default_val, alt_val) = parse_var_spec(raw)
+        let resolved = resolve_var(var_name, parsed, env)
+        match resolved {
+          Some(v) =>
+            match alt_val {
+              Some(alt) => buf.write_string(alt)
+              None => buf.write_string(v)
+            }
           None =>
-            match default_val {
-              Some(def) => buf.write_string(def)
-              None => {
-                buf.write_string("${")
-                buf.write_string(raw)
-                buf.write_char('}')
-              }
+            if default_val is Some(def) {
+              buf.write_string(def)
+            } else if alt_val is Some(_) {
+              buf.write_string("")
+            } else {
+              buf.write_string("${")
+              buf.write_string(raw)
+              buf.write_char('}')
             }
         }
       } else if next == '_' ||
@@ -114,9 +119,11 @@ fn resolve_var(
   None
 }
 
-/// Parse a variable spec like `VAR` or `VAR:-default`.
-/// Returns (var_name, optional_default_value).
-fn parse_var_spec(raw : String) -> (String, String?) {
+/// Parse a variable spec like `VAR`, `VAR:-default`, or `VAR:+alt`.
+/// Returns (var_name, optional_default, optional_alt).
+fn parse_var_spec(
+  raw : String,
+) -> (String, String?, String?) {
   let len = raw.length()
   let mut i = 0
   while i < len {
@@ -126,10 +133,14 @@ fn parse_var_spec(raw : String) -> (String, String?) {
       if next == '-' {
         let var_name = raw[0:i].to_owned()
         let default_val = raw[i + 2:len].to_owned()
-        return (var_name, Some(default_val))
+        return (var_name, Some(default_val), None)
+      } else if next == '+' {
+        let var_name = raw[0:i].to_owned()
+        let alt_val = raw[i + 2:len].to_owned()
+        return (var_name, None, Some(alt_val))
       }
     }
     i += 1
   }
-  (raw, None)
+  (raw, None, None)
 }
