@@ -202,6 +202,12 @@ fn parse_double_quoted(p : Parser) -> String {
           } else if next == 'r' {
             buf.write_char('\r')
             p.pos += 2
+          } else if next == 't' {
+            buf.write_char('\t')
+            p.pos += 2
+          } else if next == '\\' {
+            buf.write_char('\\')
+            p.pos += 2
           } else {
             buf.write_char('\\')
             p.pos += 1

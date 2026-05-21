@@ -270,3 +270,21 @@ test "dots and dashes in key" {
   let result = parse("my.key-name=value")
   assert_eq(result["my.key-name"], "value")
 }
+
+///|
+test "expand tabs in double quotes" {
+  let result = parse("KEY=\"col1\\tcol2\"")
+  assert_eq(result["KEY"], "col1\tcol2")
+}
+
+///|
+test "expand backslash in double quotes" {
+  let result = parse("KEY=\"path\\\\to\\\\file\"")
+  assert_eq(result["KEY"], "path\\to\\file")
+}
+
+///|
+test "backslash n stays literal in double quotes" {
+  let result = parse("KEY=\"keep\\nliteral\"")
+  assert_eq(result["KEY"], "keep\nliteral")
+}
