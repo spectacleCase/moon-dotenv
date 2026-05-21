@@ -288,3 +288,44 @@ test "backslash n stays literal in double quotes" {
   let result = parse("KEY=\"keep\\nliteral\"")
   assert_eq(result["KEY"], "keep\nliteral")
 }
+
+///|
+test "try_parse returns ok on valid input" {
+  let result = try_parse("KEY=value")
+  assert_true(result is Ok(_))
+  assert_eq(result.unwrap()["KEY"], "value")
+}
+
+///|
+test "try_parse returns err on unclosed single quote" {
+  let result = try_parse("KEY='unclosed")
+  assert_true(result is Err(_))
+  let err = result.unwrap_err()
+  assert_eq(err.message, "unclosed single quote")
+  assert_eq(err.line, 1)
+}
+
+///|
+test "try_parse returns err on unclosed double quote" {
+  let result = try_parse("KEY=\"unclosed")
+  assert_true(result is Err(_))
+  let err = result.unwrap_err()
+  assert_eq(err.message, "unclosed double quote")
+  assert_eq(err.line, 1)
+}
+
+///|
+test "try_parse returns err on unclosed backtick" {
+  let result = try_parse("KEY=`unclosed")
+  assert_true(result is Err(_))
+  let err = result.unwrap_err()
+  assert_eq(err.message, "unclosed backtick")
+  assert_eq(err.line, 1)
+}
+
+///|
+test "try_parse error line number" {
+  let result = try_parse("A=ok\nB=ok\nC='unclosed")
+  assert_true(result is Err(_))
+  assert_eq(result.unwrap_err().line, 3)
+}

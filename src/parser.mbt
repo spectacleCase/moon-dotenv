@@ -1,12 +1,19 @@
 ///|
+pub struct ParseError {
+  message : String
+  line : Int
+}
+
+///|
 priv struct Parser {
   source : String
   mut pos : Int
+  mut line : Int
 }
 
 ///|
 fn Parser::new(source : String) -> Parser {
-  { source, pos: 0 }
+  { source, pos: 0, line: 1 }
 }
 
 ///|
@@ -59,12 +66,16 @@ fn Parser::skip_eol(self : Parser) -> Unit {
   match self.peek() {
     Some('\r') => {
       self.pos += 1
+      self.line += 1
       match self.peek() {
         Some('\n') => self.pos += 1
         _ => ()
       }
     }
-    Some('\n') => self.pos += 1
+    Some('\n') => {
+      self.pos += 1
+      self.line += 1
+    }
     _ => ()
   }
 }
@@ -166,6 +177,50 @@ fn parse_value(p : Parser) -> String {
   p.source[start:end].to_owned()
 }
 
+fn try_parse_value(p : Parser) -> Result[String, ParseError] {
+  p.skip_whitespace()
+  if p.is_eof() {
+    return Ok("")
+  }
+  match p.peek() {
+    Some('\n') | Some('\r') => {
+      p.skip_eol()
+      return Ok("")
+    }
+    Some('\'') => {
+      p.pos += 1
+      return try_parse_single_quoted(p)
+    }
+    Some('"') => {
+      p.pos += 1
+      return try_parse_double_quoted(p)
+    }
+    Some('`') => {
+      p.pos += 1
+      return try_parse_backtick_quoted(p)
+    }
+    _ => ()
+  }
+  let start = p.pos
+  let mut end = p.pos
+  while !p.is_eof() {
+    match p.peek() {
+      Some('\n') | Some('\r') => break
+      Some('#') => break
+      _ => {
+        p.pos += 1
+        end = p.pos
+      }
+    }
+  }
+  while end > start &&
+        Int::unsafe_to_char(p.source.code_unit_at(end - 1).to_int()) == ' ' {
+    end -= 1
+  }
+  p.skip_eol()
+  Ok(p.source[start:end].to_owned())
+}
+
 ///|
 fn parse_single_quoted(p : Parser) -> String {
   let buf = StringBuilder::new()
@@ -180,6 +235,27 @@ fn parse_single_quoted(p : Parser) -> String {
   p.skip_to_eol()
   p.skip_eol()
   buf.to_string()
+}
+
+fn try_parse_single_quoted(
+  p : Parser,
+) -> Result[String, ParseError] {
+  let buf = StringBuilder::new()
+  while !p.is_eof() {
+    match p.read_char() {
+      Some('\'') => {
+        p.skip_to_eol()
+        p.skip_eol()
+        return Ok(buf.to_string())
+      }
+      Some('\n') => buf.write_char('\n')
+      Some(ch) => buf.write_char(ch)
+      None => {
+        return Err({ message: "unclosed single quote", line: p.line })
+      }
+    }
+  }
+  Err({ message: "unclosed single quote", line: p.line })
 }
 
 ///|
@@ -232,6 +308,59 @@ fn parse_double_quoted(p : Parser) -> String {
   buf.to_string()
 }
 
+fn try_parse_double_quoted(
+  p : Parser,
+) -> Result[String, ParseError] {
+  let buf = StringBuilder::new()
+  while !p.is_eof() {
+    match p.peek() {
+      Some('"') => {
+        p.pos += 1
+        p.skip_to_eol()
+        p.skip_eol()
+        return Ok(buf.to_string())
+      }
+      Some('\\') =>
+        if p.pos + 1 < p.source.length() {
+          let next = Int::unsafe_to_char(
+            p.source.code_unit_at(p.pos + 1).to_int(),
+          )
+          if next == 'n' {
+            buf.write_char('\n')
+            p.pos += 2
+          } else if next == 'r' {
+            buf.write_char('\r')
+            p.pos += 2
+          } else if next == 't' {
+            buf.write_char('\t')
+            p.pos += 2
+          } else if next == '\\' {
+            buf.write_char('\\')
+            p.pos += 2
+          } else {
+            buf.write_char('\\')
+            p.pos += 1
+          }
+        } else {
+          buf.write_char('\\')
+          p.pos += 1
+        }
+      Some('\n') => {
+        buf.write_char('\n')
+        p.pos += 1
+      }
+      Some(ch) => {
+        buf.write_char(ch)
+        p.pos += 1
+      }
+      None => {
+        return Err({ message: "unclosed double quote", line: p.line })
+      }
+    }
+  }
+  Err({ message: "unclosed double quote", line: p.line })
+}
+
 ///|
 fn parse_backtick_quoted(p : Parser) -> String {
   let buf = StringBuilder::new()
@@ -246,4 +375,25 @@ fn parse_backtick_quoted(p : Parser) -> String {
   p.skip_to_eol()
   p.skip_eol()
   buf.to_string()
+}
+
+fn try_parse_backtick_quoted(
+  p : Parser,
+) -> Result[String, ParseError] {
+  let buf = StringBuilder::new()
+  while !p.is_eof() {
+    match p.read_char() {
+      Some('`') => {
+        p.skip_to_eol()
+        p.skip_eol()
+        return Ok(buf.to_string())
+      }
+      Some('\n') => buf.write_char('\n')
+      Some(ch) => buf.write_char(ch)
+      None => {
+        return Err({ message: "unclosed backtick", line: p.line })
+      }
+    }
+  }
+  Err({ message: "unclosed backtick", line: p.line })
 }
