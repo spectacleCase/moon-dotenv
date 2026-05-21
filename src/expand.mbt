@@ -31,24 +31,30 @@ fn expand_value(
     if ch == '$' && i + 1 < len {
       let next = Int::unsafe_to_char(value.code_unit_at(i + 1).to_int())
       if next == '{' {
-        // ${VAR} syntax
+        // ${VAR} or ${VAR:-default} syntax
         i += 2
         let var_start = i
         while i < len &&
               Int::unsafe_to_char(value.code_unit_at(i).to_int()) != '}' {
           i += 1
         }
-        let var_name = value[var_start:i].to_owned()
+        let raw = value[var_start:i].to_owned()
         if i < len {
           i += 1
         } // skip closing }
+        // Check for :-default syntax
+        let (var_name, default_val) = parse_var_spec(raw)
         match resolve_var(var_name, parsed, env) {
           Some(v) => buf.write_string(v)
-          None => {
-            buf.write_string("${")
-            buf.write_string(var_name)
-            buf.write_char('}')
-          }
+          None =>
+            match default_val {
+              Some(def) => buf.write_string(def)
+              None => {
+                buf.write_string("${")
+                buf.write_string(raw)
+                buf.write_char('}')
+              }
+            }
         }
       } else if next == '_' ||
         (next >= 'a' && next <= 'z') ||
@@ -106,4 +112,24 @@ fn resolve_var(
     }
   }
   None
+}
+
+/// Parse a variable spec like `VAR` or `VAR:-default`.
+/// Returns (var_name, optional_default_value).
+fn parse_var_spec(raw : String) -> (String, String?) {
+  let len = raw.length()
+  let mut i = 0
+  while i < len {
+    let ch = Int::unsafe_to_char(raw.code_unit_at(i).to_int())
+    if ch == ':' && i + 1 < len {
+      let next = Int::unsafe_to_char(raw.code_unit_at(i + 1).to_int())
+      if next == '-' {
+        let var_name = raw[0:i].to_owned()
+        let default_val = raw[i + 2:len].to_owned()
+        return (var_name, Some(default_val))
+      }
+    }
+    i += 1
+  }
+  (raw, None)
 }

@@ -41,3 +41,31 @@ test "expand parsed takes precedence over env" {
   let result = expand(parsed, env~)
   assert_eq(result["REF"], "from_parsed")
 }
+
+///|
+test "expand default value when undefined" {
+  let parsed = parse("REF=${UNDEFINED:-fallback}")
+  let result = expand(parsed)
+  assert_eq(result["REF"], "fallback")
+}
+
+///|
+test "expand default value ignored when defined" {
+  let parsed = parse("KEY=actual\nREF=${KEY:-fallback}")
+  let result = expand(parsed)
+  assert_eq(result["REF"], "actual")
+}
+
+///|
+test "expand default value empty string" {
+  let parsed = parse("REF=${UNDEFINED:-}")
+  let result = expand(parsed)
+  assert_eq(result["REF"], "")
+}
+
+///|
+test "expand default value with special chars" {
+  let parsed = parse("REF=${UNDEFINED:-hello world}")
+  let result = expand(parsed)
+  assert_eq(result["REF"], "hello world")
+}
