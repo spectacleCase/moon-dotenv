@@ -50,3 +50,40 @@ test "merge force other wins" {
   let result = merge(base, other, force=true)
   assert_eq(result["KEY"], "other")
 }
+
+///|
+test "load_multi merges in order" {
+  let sources = ["A=1", "B=2"]
+  let result = load_multi(sources)
+  assert_eq(result["A"], "1")
+  assert_eq(result["B"], "2")
+}
+
+///|
+test "load_multi later overrides earlier" {
+  let sources = ["KEY=first", "KEY=second"]
+  let result = load_multi(sources)
+  assert_eq(result["KEY"], "second")
+}
+
+///|
+test "load_multi empty array" {
+  let sources : Array[String] = []
+  let result = load_multi(sources)
+  assert_eq(result.length(), 0)
+}
+
+///|
+test "config_multi with env" {
+  let env = Map([("EXISTING", "val")], capacity=1)
+  let result = config_multi(["NEW=1"], env~)
+  assert_eq(result["EXISTING"], "val")
+  assert_eq(result["NEW"], "1")
+}
+
+///|
+test "config_multi force override" {
+  let env = Map([("KEY", "env")], capacity=1)
+  let result = config_multi(["KEY=parsed"], env~, force=true)
+  assert_eq(result["KEY"], "parsed")
+}

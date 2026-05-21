@@ -32,3 +32,31 @@ pub fn merge(
   }
   result
 }
+
+///|
+/// Parse multiple `.env` strings and merge them in order.
+/// Later files override earlier ones.
+pub fn load_multi(
+  sources : Array[String],
+) -> Map[String, String] {
+  let result = Map([], capacity=16)
+  for src in sources {
+    let parsed = parse(src)
+    for k, v in parsed {
+      result[k] = v
+    }
+  }
+  result
+}
+
+///|
+/// Like `load_multi`, but also merge with an existing environment.
+/// When `force` is `true`, parsed values overwrite existing keys.
+pub fn config_multi(
+  sources : Array[String],
+  env~ : Map[String, String] = Map([], capacity=0),
+  force~ : Bool = false,
+) -> Map[String, String] {
+  let merged = load_multi(sources)
+  merge(env, merged, force~)
+}
