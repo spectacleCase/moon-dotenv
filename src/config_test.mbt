@@ -87,3 +87,33 @@ test "config_multi force override" {
   let result = config_multi(["KEY=parsed"], env~, force=true)
   assert_eq(result["KEY"], "parsed")
 }
+
+///|
+test "populate basic" {
+  let target = Map([], capacity=4)
+  let parsed = parse("A=1\nB=2")
+  let count = populate(target, parsed)
+  assert_eq(count, 2)
+  assert_eq(target["A"], "1")
+  assert_eq(target["B"], "2")
+}
+
+///|
+test "populate skips existing by default" {
+  let target = Map([("A", "existing")], capacity=2)
+  let parsed = parse("A=new\nB=2")
+  let count = populate(target, parsed)
+  assert_eq(count, 1)
+  assert_eq(target["A"], "existing")
+  assert_eq(target["B"], "2")
+}
+
+///|
+test "populate force overwrites" {
+  let target = Map([("A", "existing")], capacity=2)
+  let parsed = parse("A=new\nB=2")
+  let count = populate(target, parsed, force=true)
+  assert_eq(count, 2)
+  assert_eq(target["A"], "new")
+  assert_eq(target["B"], "2")
+}

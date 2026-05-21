@@ -60,3 +60,24 @@ pub fn config_multi(
   let merged = load_multi(sources)
   merge(env, merged, force~)
 }
+
+///|
+/// Write parsed key-value pairs into a target map.
+///
+/// When `force` is `true`, parsed values overwrite existing keys.
+/// When `false` (default), existing keys in `target` are preserved.
+/// Returns the number of keys actually written.
+pub fn populate(
+  target : Map[String, String],
+  parsed : Map[String, String],
+  force~ : Bool = false,
+) -> Int {
+  let mut count = 0
+  for k, v in parsed {
+    if force || !target.contains(k) {
+      target[k] = v
+      count += 1
+    }
+  }
+  count
+}
