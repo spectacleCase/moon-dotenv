@@ -329,3 +329,19 @@ test "try_parse error line number" {
   assert_true(result is Err(_))
   assert_eq(result.unwrap_err().line, 3)
 }
+
+///|
+test "ParseError to_string" {
+  let result = try_parse("KEY='unclosed")
+  assert_true(result is Err(_))
+  let err = result.unwrap_err()
+  assert_eq(err.to_string(), "ParseError(line 1): unclosed single quote")
+}
+
+///|
+test "ParseError to_string multiline" {
+  let result = try_parse("A=ok\nB=\"unclosed")
+  assert_true(result is Err(_))
+  let err = result.unwrap_err()
+  assert_eq(err.to_string(), "ParseError(line 2): unclosed double quote")
+}

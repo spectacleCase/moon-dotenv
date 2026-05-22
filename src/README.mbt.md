@@ -124,12 +124,48 @@ test "expand undefined variable" {
   assert_eq(result["REF"], "$UNDEFINED")
 }
 
+### stringify
+
+将 `Map[String, String]` 序列化为 `.env` 格式字符串。需要转义的值会自动双引号包裹。
+
+test "stringify roundtrip" {
+  let parsed = @dotenv.parse("HOST=localhost\nPORT=5432")
+  let output = @dotenv.stringify(parsed)
+  let reparsed = @dotenv.parse(output)
+  assert_eq(reparsed["HOST"], "localhost")
+  assert_eq(reparsed["PORT"], "5432")
+}
+
+### diff
+
+对比两个 Map，返回新增、删除、变更的键。
+
+test "diff detects changes" {
+  let base = @dotenv.parse("A=1\nB=2")
+  let other = @dotenv.parse("A=1\nC=3")
+  let d = @dotenv.diff(base, other)
+  assert_eq(d.removed.length(), 1)
+  assert_eq(d.added.length(), 1)
+}
+
+### try_parse
+
+类似 `parse`，但遇到未闭合引号时返回 `Err(ParseError)` 而非静默忽略。
+
+test "try_parse error" {
+  let result = @dotenv.try_parse("KEY='unclosed")
+  assert_true(result is Err(_))
+}
+
 ## API 参考
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
 | `parse` | `(String) -> Map[String, String]` | 将 `.env` 字符串解析为键值对 Map |
+| `try_parse` | `(String) -> Result[Map[String, String], ParseError]` | 解析，遇到错误返回 `Err` |
 | `expand` | `(Map[String, String], env~ : Map[String, String]) -> Map[String, String]` | 展开值中的 `$VAR` / `${VAR}` 引用 |
+| `stringify` | `(Map[String, String]) -> String` | 将 Map 序列化为 `.env` 格式字符串 |
+| `diff` | `(Map[String, String], Map[String, String]) -> DiffResult` | 对比两个 Map，返回 added/removed/changed |
 
 ## 许可证
 

@@ -5,6 +5,11 @@ pub struct ParseError {
 }
 
 ///|
+pub impl Show for ParseError with to_string(self) {
+  "ParseError(line \{self.line}): \{self.message}"
+}
+
+///|
 priv struct Parser {
   source : String
   mut pos : Int
