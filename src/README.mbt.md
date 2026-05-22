@@ -157,15 +157,49 @@ test "try_parse error" {
   assert_true(result is Err(_))
 }
 
+### defaults
+
+为缺失的键设置默认值，不影响已存在的键。
+
+test "defaults fills missing" {
+  let env = @dotenv.parse("HOST=localhost")
+  let defs = Map([("PORT", "5432"), ("HOST", "127.0.0.1")], capacity=2)
+  let result = @dotenv.defaults(env, defs)
+  assert_eq(result["HOST"], "localhost")
+  assert_eq(result["PORT"], "5432")
+}
+
+### validate
+
+校验必需的 key 是否存在，返回缺失的 key 列表。
+
+test "validate finds missing keys" {
+  let env = @dotenv.parse("HOST=localhost")
+  let missing = @dotenv.validate(env, ["HOST", "PORT", "DB"])
+  assert_eq(missing.length(), 2)
+}
+
+### `$$` 转义
+
+`$$` 在 `expand` 中表示字面量 `$`，不会触发变量展开：
+
+test "dollar dollar escape" {
+  let parsed = @dotenv.parse("PRICE=$$100")
+  let result = @dotenv.expand(parsed)
+  assert_eq(result["PRICE"], "$100")
+}
+
 ## API 参考
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
 | `parse` | `(String) -> Map[String, String]` | 将 `.env` 字符串解析为键值对 Map |
 | `try_parse` | `(String) -> Result[Map[String, String], ParseError]` | 解析，遇到错误返回 `Err` |
-| `expand` | `(Map[String, String], env~ : Map[String, String]) -> Map[String, String]` | 展开值中的 `$VAR` / `${VAR}` 引用 |
+| `expand` | `(Map[String, String], env~ : Map[String, String]) -> Map[String, String]` | 展开 `$VAR` / `${VAR}`，`$$` 表示字面量 `$` |
 | `stringify` | `(Map[String, String]) -> String` | 将 Map 序列化为 `.env` 格式字符串 |
 | `diff` | `(Map[String, String], Map[String, String]) -> DiffResult` | 对比两个 Map，返回 added/removed/changed |
+| `defaults` | `(Map[String, String], Map[String, String]) -> Map[String, String]` | 为缺失的键设置默认值 |
+| `validate` | `(Map[String, String], Array[String]) -> Array[String]` | 校验必需 key，返回缺失列表 |
 
 ## 许可证
 
