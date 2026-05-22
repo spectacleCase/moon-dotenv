@@ -90,3 +90,64 @@ test "expand alt value empty string when defined" {
   let result = expand(parsed)
   assert_eq(result["REF"], "")
 }
+
+///|
+test "expand chained references" {
+  let parsed = parse("A=$B\nB=$C\nC=hello")
+  let result = expand(parsed)
+  assert_eq(result["A"], "hello")
+  assert_eq(result["B"], "hello")
+  assert_eq(result["C"], "hello")
+}
+
+///|
+test "expand deep chain" {
+  let parsed = parse("A=$B\nB=$C\nC=$D\nD=$E\nE=deep")
+  let result = expand(parsed)
+  assert_eq(result["A"], "deep")
+}
+
+///|
+test "expand circular reference does not loop" {
+  let parsed = parse("A=$B\nB=$A")
+  let result = expand(parsed)
+  let a = result["A"]
+  assert_true(a == "$A" || a == "$B" || a == "A" || a.contains("$"))
+}
+
+///|
+test "expand self reference does not loop" {
+  let parsed = parse("A=$A")
+  let result = expand(parsed)
+  assert_eq(result["A"], "$A")
+}
+
+///|
+test "expand partial chain with literal" {
+  let parsed = parse("URL=${PROTO}://${HOST}:${PORT}\nPROTO=https\nHOST=example.com\nPORT=8080")
+  let result = expand(parsed)
+  assert_eq(result["URL"], "https://example.com:8080")
+}
+
+///|
+test "expand dollar dollar escape" {
+  let parsed = parse("PRICE=$$100")
+  let result = expand(parsed)
+  assert_eq(result["PRICE"], "$100")
+}
+
+///|
+test "expand dollar dollar before var" {
+  let parsed = parse("ESCAPE=$$\nREF=$$HOME")
+  let result = expand(parsed)
+  assert_eq(result["ESCAPE"], "$")
+  assert_eq(result["REF"], "$HOME")
+}
+
+///|
+test "expand dollar dollar with normal var" {
+  let parsed = parse("LITERAL=$$\nVAR=hello\nREF=$$${VAR}")
+  let result = expand(parsed)
+  assert_eq(result["LITERAL"], "$")
+  assert_eq(result["REF"], "$hello")
+}

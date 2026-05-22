@@ -11,18 +11,23 @@ pub fn expand(
 ) -> Map[String, String] {
   let result = Map([], capacity=parsed.length())
   for key, value in parsed {
-    result[key] = expand_value(value, parsed, env~)
+    result[key] = expand_value(value, parsed, env~, 0)
   }
   result
 }
 
 ///|
 /// Expand `$VAR` and `${VAR}` references in a single value string.
+/// Recursively expands resolved values up to `max_depth` to handle chained references.
 fn expand_value(
   value : String,
   parsed : Map[String, String],
   env~ : Map[String, String],
+  depth : Int,
 ) -> String {
+  if depth > 100 {
+    return value
+  }
   let buf = StringBuilder::new()
   let len = value.length()
   let mut i = 0
@@ -30,7 +35,11 @@ fn expand_value(
     let ch = Int::unsafe_to_char(value.code_unit_at(i).to_int())
     if ch == '$' && i + 1 < len {
       let next = Int::unsafe_to_char(value.code_unit_at(i + 1).to_int())
-      if next == '{' {
+      if next == '$' {
+        // $$ -> literal $
+        buf.write_char('$')
+        i += 2
+      } else if next == '{' {
         // ${VAR} or ${VAR:-default} syntax
         i += 2
         let var_start = i
@@ -95,7 +104,12 @@ fn expand_value(
       i += 1
     }
   }
-  buf.to_string()
+  let result = buf.to_string()
+  if result != value {
+    expand_value(result, parsed, env~, depth + 1)
+  } else {
+    result
+  }
 }
 
 ///|
