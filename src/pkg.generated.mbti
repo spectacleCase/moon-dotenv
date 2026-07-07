@@ -2,13 +2,44 @@
 package "lizhentao/dotenv"
 
 // Values
+pub fn config(String, env? : Map[String, String], force? : Bool) -> Map[String, String]
+
+pub fn config_multi(Array[String], env? : Map[String, String], force? : Bool) -> Map[String, String]
+
+pub fn defaults(Map[String, String], Map[String, String]) -> Map[String, String]
+
+pub fn diff(Map[String, String], Map[String, String]) -> DiffResult
+
 pub fn expand(Map[String, String], env? : Map[String, String]) -> Map[String, String]
 
+pub fn load_multi(Array[String]) -> Map[String, String]
+
+pub fn merge(Map[String, String], Map[String, String], force? : Bool) -> Map[String, String]
+
 pub fn parse(String) -> Map[String, String]
+
+pub fn populate(Map[String, String], Map[String, String], force? : Bool) -> Int
+
+pub fn stringify(Map[String, String]) -> String
+
+pub fn try_parse(String) -> Result[Map[String, String], ParseError]
+
+pub fn validate(Map[String, String], Array[String]) -> Array[String]
 
 // Errors
 
 // Types and methods
+pub struct DiffResult {
+  added : Array[String]
+  removed : Array[String]
+  changed : Array[String]
+}
+
+pub struct ParseError {
+  message : String
+  line : Int
+}
+pub impl Show for ParseError
 
 // Type aliases
 

@@ -193,13 +193,18 @@ test "dollar dollar escape" {
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
-| `parse` | `(String) -> Map[String, String]` | 将 `.env` 字符串解析为键值对 Map |
+| `parse` | `(String) -> Map[String, String]` | 将 `.env` 字符串解析为键值对 Map（自动剥离 UTF-8 BOM） |
 | `try_parse` | `(String) -> Result[Map[String, String], ParseError]` | 解析，遇到错误返回 `Err` |
-| `expand` | `(Map[String, String], env~ : Map[String, String]) -> Map[String, String]` | 展开 `$VAR` / `${VAR}`，`$$` 表示字面量 `$` |
+| `expand` | `(Map[String, String], env? : Map[String, String]) -> Map[String, String]` | 展开 `$VAR` / `${VAR}`，`$$` 表示字面量 `$` |
 | `stringify` | `(Map[String, String]) -> String` | 将 Map 序列化为 `.env` 格式字符串 |
 | `diff` | `(Map[String, String], Map[String, String]) -> DiffResult` | 对比两个 Map，返回 added/removed/changed |
 | `defaults` | `(Map[String, String], Map[String, String]) -> Map[String, String]` | 为缺失的键设置默认值 |
 | `validate` | `(Map[String, String], Array[String]) -> Array[String]` | 校验必需 key，返回缺失列表 |
+| `config` | `(String, env? : Map[String, String], force? : Bool) -> Map[String, String]` | 解析并合并环境变量，可选 force 覆盖 |
+| `merge` | `(Map[String, String], Map[String, String], force? : Bool) -> Map[String, String]` | 合并两个 Map |
+| `load_multi` | `(Array[String]) -> Map[String, String]` | 解析多个 `.env` 字符串并合并 |
+| `config_multi` | `(Array[String], env? : Map[String, String], force? : Bool) -> Map[String, String]` | 多文件解析合并，可与外部 env 合并 |
+| `populate` | `(Map[String, String], Map[String, String], force? : Bool) -> Int` | 将解析结果写入目标 Map，返回写入数量 |
 
 ## 许可证
 

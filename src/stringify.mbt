@@ -19,6 +19,7 @@ pub fn stringify(map : Map[String, String]) -> String {
   buf.to_string()
 }
 
+///|
 fn needs_quoting(value : String) -> Bool {
   let len = value.length()
   if len == 0 {
@@ -27,8 +28,15 @@ fn needs_quoting(value : String) -> Bool {
   let mut i = 0
   while i < len {
     let ch = Int::unsafe_to_char(value.code_unit_at(i).to_int())
-    if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' ||
-      ch == '#' || ch == '"' || ch == '\'' || ch == '`' || ch == '\\' {
+    if ch == ' ' ||
+      ch == '\t' ||
+      ch == '\n' ||
+      ch == '\r' ||
+      ch == '#' ||
+      ch == '"' ||
+      ch == '\'' ||
+      ch == '`' ||
+      ch == '\\' {
       return true
     }
     i += 1
@@ -36,6 +44,7 @@ fn needs_quoting(value : String) -> Bool {
   false
 }
 
+///|
 fn quote_value(value : String) -> String {
   if !needs_quoting(value) {
     return value

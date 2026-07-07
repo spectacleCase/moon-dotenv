@@ -345,3 +345,33 @@ test "ParseError to_string multiline" {
   let err = result.unwrap_err()
   assert_eq(err.to_string(), "ParseError(line 2): unclosed double quote")
 }
+
+///|
+test "strip utf-8 bom" {
+  let src = "\u{FEFF}KEY=value"
+  let result = parse(src)
+  assert_eq(result["KEY"], "value")
+}
+
+///|
+test "strip utf-8 bom with multiple keys" {
+  let src = "\u{FEFF}A=1\nB=2"
+  let result = parse(src)
+  assert_eq(result["A"], "1")
+  assert_eq(result["B"], "2")
+}
+
+///|
+test "no bom is harmless" {
+  let src = "KEY=value"
+  let result = parse(src)
+  assert_eq(result["KEY"], "value")
+}
+
+///|
+test "try_parse strips utf-8 bom" {
+  let src = "\u{FEFF}KEY=value"
+  let result = try_parse(src)
+  assert_true(result is Ok(_))
+  assert_eq(result.unwrap()["KEY"], "value")
+}

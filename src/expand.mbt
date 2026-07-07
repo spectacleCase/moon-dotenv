@@ -133,11 +133,10 @@ fn resolve_var(
   None
 }
 
+///|
 /// Parse a variable spec like `VAR`, `VAR:-default`, or `VAR:+alt`.
 /// Returns (var_name, optional_default, optional_alt).
-fn parse_var_spec(
-  raw : String,
-) -> (String, String?, String?) {
+fn parse_var_spec(raw : String) -> (String, String?, String?) {
   let len = raw.length()
   let mut i = 0
   while i < len {

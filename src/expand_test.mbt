@@ -124,7 +124,9 @@ test "expand self reference does not loop" {
 
 ///|
 test "expand partial chain with literal" {
-  let parsed = parse("URL=${PROTO}://${HOST}:${PORT}\nPROTO=https\nHOST=example.com\nPORT=8080")
+  let parsed = parse(
+    "URL=${PROTO}://${HOST}:${PORT}\nPROTO=https\nHOST=example.com\nPORT=8080",
+  )
   let result = expand(parsed)
   assert_eq(result["URL"], "https://example.com:8080")
 }

@@ -34,7 +34,10 @@ test "diff detects changed values" {
 ///|
 test "diff mixed changes" {
   let base = Map([("KEEP", "same"), ("OLD", "val")], capacity=2)
-  let other = Map([("KEEP", "same"), ("NEW", "val"), ("OLD", "changed")], capacity=3)
+  let other = Map(
+    [("KEEP", "same"), ("NEW", "val"), ("OLD", "changed")],
+    capacity=3,
+  )
   let d = diff(base, other)
   assert_eq(d.added.length(), 1)
   assert_eq(d.added[0], "NEW")

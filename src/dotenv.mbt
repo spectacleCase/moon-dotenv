@@ -1,7 +1,18 @@
 ///|
+/// Strip UTF-8 BOM (U+FEFF) from the beginning of a string if present.
+fn strip_bom(src : String) -> String {
+  if src.length() >= 1 && src.code_unit_at(0).to_int() == 0xFEFF {
+    src[1:src.length()].to_owned()
+  } else {
+    src
+  }
+}
+
+///|
 /// Parse a `.env` file string into a Map of key-value pairs.
 ///
 /// Supports:
+/// - UTF-8 BOM (U+FEFF) is silently stripped
 /// - `KEY=value` and `KEY: value` syntax
 /// - `export KEY=value` prefix
 /// - Single-quoted values (literal, no escape processing)
@@ -15,7 +26,7 @@
 /// Last duplicate key wins. Malformed quotes are silently ignored.
 pub fn parse(src : String) -> Map[String, String] {
   let result = Map([], capacity=16)
-  let p = Parser::new(src)
+  let p = Parser::new(strip_bom(src))
   while !p.is_eof() {
     p.skip_whitespace()
     if p.is_eof() {
@@ -58,11 +69,9 @@ pub fn parse(src : String) -> Map[String, String] {
 ///|
 /// Like `parse`, but returns `Err(ParseError)` on malformed input
 /// (e.g. unclosed quotes).
-pub fn try_parse(
-  src : String,
-) -> Result[Map[String, String], ParseError] {
+pub fn try_parse(src : String) -> Result[Map[String, String], ParseError] {
   let result = Map([], capacity=16)
-  let p = Parser::new(src)
+  let p = Parser::new(strip_bom(src))
   while !p.is_eof() {
     p.skip_whitespace()
     if p.is_eof() {
