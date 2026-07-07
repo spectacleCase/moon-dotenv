@@ -1,5 +1,5 @@
 import {
-  "lizhentao/dotenv" @lib,
+  "spectacleCase/dotenv" @lib,
 }
 
 options(

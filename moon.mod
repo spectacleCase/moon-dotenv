@@ -1,4 +1,4 @@
-name = "lizhentao/dotenv"
+name = "spectacleCase/dotenv"
 
 version = "0.1.0"
 

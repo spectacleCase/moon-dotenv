@@ -1,4 +1,4 @@
-# lizhentao/dotenv
+# spectacleCase/dotenv
 
 MoonBit 版 Dotenv —— 从 `.env` 文件中加载环境变量。
 
@@ -7,7 +7,7 @@ MoonBit 版 Dotenv —— 从 `.env` 文件中加载环境变量。
 ## 安装
 
 ```
-moon add lizhentao/dotenv
+moon add spectacleCase/dotenv
 ```
 
 ## 使用方法
